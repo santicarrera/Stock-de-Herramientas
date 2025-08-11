@@ -922,6 +922,9 @@
                     workerNames = data.names;
                 }
 
+                // Forzar inicialización de trabajadores después de sync
+                initializeWorkers();
+
                 lastSyncTime = new Date();
                 updateSyncStatus('connected', '✅ Sincronizado correctamente');
                 showMessage('stock-message', '✅ Datos sincronizados desde Google Sheets', 'success');
@@ -1880,6 +1883,9 @@
                 if (data.history) lossHistory = data.history;
                 if (data.names) workerNames = data.names;
 
+                // Forzar inicialización de trabajadores después de sync
+                initializeWorkers();
+
                 lastSyncTime = new Date();
                 updateSyncStatus('connected', '✅ Sincronizado');
                 showMessage('stock-message', '✅ Datos sincronizados correctamente', 'success');
@@ -1914,8 +1920,6 @@
             } finally {
                 disableButtons(false);
             }
-            // Forzar inicialización de trabajadores después de sync
-            initializeWorkers();
         }
 
         // Override de la función original
@@ -2006,3 +2010,4 @@
 </body>
 
 </html>
+
