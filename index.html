@@ -831,10 +831,13 @@
         }
 
         function initializeWorkers() {
-            if (Object.keys(workers).length === 0) {
-                for (let i = 1; i <= 41; i++) {
-                    const workerId = `Trabajador ${i}`;
+            // Siempre asegurar que existan los 41 trabajadores
+            for (let i = 1; i <= 41; i++) {
+                const workerId = `Trabajador ${i}`;
+                if (!workers[workerId]) {
                     workers[workerId] = {};
+                }
+                if (!workerNames[workerId]) {
                     workerNames[workerId] = workerId;
                 }
             }
@@ -1911,6 +1914,8 @@
             } finally {
                 disableButtons(false);
             }
+            // Forzar inicialización de trabajadores después de sync
+            initializeWorkers();
         }
 
         // Override de la función original
@@ -1999,4 +2004,5 @@
         console.log('🔧 Sistema de herramientas cargado y listo');
     </script>
 </body>
+
 </html>
