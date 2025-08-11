@@ -910,8 +910,13 @@
                     });
                 }
 
-                if (data.workers) {
-                    workers = data.workers;
+                if (data.workers && Object.keys(data.workers).length > 0) {
+                    // Fusionar datos de Sheets con trabajadores existentes
+                    Object.keys(data.workers).forEach(workerId => {
+                        workers[workerId] = data.workers[workerId];
+                    });
+                } else {
+                    console.log('No hay trabajadores en Google Sheets, manteniendo trabajadores locales');
                 }
 
                 if (data.history) {
@@ -1879,7 +1884,14 @@
                     });
                 }
 
-                if (data.workers) workers = data.workers;
+                if (data.workers && Object.keys(data.workers).length > 0) {
+                    // Fusionar datos de Sheets con trabajadores existentes
+                    Object.keys(data.workers).forEach(workerId => {
+                        workers[workerId] = data.workers[workerId];
+                    });
+                } else {
+                    console.log('No hay trabajadores en Google Sheets, manteniendo trabajadores locales');
+                }
                 if (data.history) lossHistory = data.history;
                 if (data.names) workerNames = data.names;
 
@@ -2010,4 +2022,5 @@
 </body>
 
 </html>
+
 
