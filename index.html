@@ -1,0 +1,2002 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Stock - Herramientas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .sync-status {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sync-status.connected {
+            background: rgba(46, 204, 113, 0.2);
+        }
+
+        .sync-status.error {
+            background: rgba(231, 76, 60, 0.2);
+        }
+
+        .sync-status.syncing {
+            background: rgba(241, 196, 15, 0.2);
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .sync-controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .sync-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .sync-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .tab.active {
+            background: white;
+            color: #3498db;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-row > div {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            user-select: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .search-box input {
+            padding-left: 45px;
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stock-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .stock-item:hover {
+            border-color: #3498db;
+            transform: translateY(-3px);
+        }
+
+        .stock-item h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            line-height: 1.3;
+        }
+
+        .stock-count {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .workers-table {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .worker-tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tool-badge {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+
+            .sync-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .sync-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Control de Stock de Herramientas</h1>
+            <p>Sistema de gestión sincronizado con Google Sheets</p>
+            <div class="sync-status" id="sync-status">
+                <span>🔄 Conectando con Google Sheets...</span>
+                <span id="last-sync">Nunca sincronizado</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Controles de sincronización -->
+            <div class="sync-controls">
+                <div class="sync-info">
+                    <strong>📊 Estado de sincronización:</strong>
+                    <div id="sync-info">Cargando información...</div>
+                </div>
+                <div class="sync-buttons">
+                    <button class="btn btn-success" id="sync-btn">
+                        ⬇️ Sincronizar desde Sheets
+                    </button>
+                    <button class="btn btn-warning" id="push-btn">
+                        ⬆️ Subir a Sheets
+                    </button>
+                    <button class="btn" id="auto-sync-btn">
+                        🔄 Auto-Sync: OFF
+                    </button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="stock">📦 Stock General</button>
+                <button class="tab" data-tab="workers">👥 Trabajadores</button>
+                <button class="tab" data-tab="add-tools">➕ Agregar Herramientas</button>
+                <button class="tab" data-tab="distribute">🔄 Distribuir</button>
+                <button class="tab" data-tab="names">👤 Nombres</button>
+                <button class="tab" data-tab="history">📋 Historial de Pérdidas</button>
+            </div>
+
+            <!-- Tab: Stock General -->
+            <div id="stock" class="tab-content active">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-tools">0</div>
+                        <div class="stat-label">Total Herramientas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-workers">41</div>
+                        <div class="stat-label">Trabajadores</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="tool-types">105</div>
+                        <div class="stat-label">Tipos de Herramientas</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Stock Disponible</h3>
+                    <div style="margin-bottom: 20px; text-align: right;">
+                        <button class="btn btn-success" id="export-btn">💾 Exportar Datos</button>
+                        <input type="file" id="import-file" accept=".json" style="display: none;">
+                        <button class="btn" id="import-btn">📂 Importar Datos</button>
+                    </div>
+                    <div id="stock-message"></div>
+                    <div class="search-box">
+                        <input type="text" id="search-stock" placeholder="Buscar herramienta...">
+                    </div>
+                    <div class="stock-grid" id="stock-grid">
+                        <!-- Stock items will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Trabajadores -->
+            <div id="workers" class="tab-content">
+                <div class="card">
+                    <h3>👥 Lista de Trabajadores y sus Herramientas</h3>
+                    <div class="search-box">
+                        <input type="text" id="search-workers" placeholder="Buscar trabajador...">
+                    </div>
+                    <div class="workers-table">
+                        <table id="workers-table">
+                            <thead>
+                                <tr>
+                                    <th>Trabajador</th>
+                                    <th>Herramientas Asignadas</th>
+                                    <th>Total</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workers-tbody">
+                                <!-- Workers will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Agregar Herramientas -->
+            <div id="add-tools" class="tab-content">
+                <div class="card">
+                    <h3>➕ Agregar Herramientas al Stock</h3>
+                    <div id="add-message"></div>
+                    <form id="add-form">
+                        <div class="form-row">
+                            <div>
+                                <label for="tool-type">Tipo de Herramienta:</label>
+                                <select id="tool-type" required>
+                                    <option value="">Seleccionar herramienta...</option>
+                                    <!-- Tools will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="quantity">Cantidad:</label>
+                                <input type="number" id="quantity" min="1" required placeholder="Ej: 5">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success">➕ Agregar al Stock</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab: Distribuir -->
+            <div id="distribute" class="tab-content">
+                <div class="card">
+                    <h3>🔄 Distribuir Herramientas</h3>
+                    <div id="distribute-message"></div>
+                    <form id="distribute-form">
+                        <div class="form-row">
+                            <div>
+                                <label for="worker-select">Trabajador:</label>
+                                <select id="worker-select" required>
+                                    <option value="">Seleccionar trabajador...</option>
+                                    <!-- Workers will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="distribute-tool">Herramienta:</label>
+                                <select id="distribute-tool" required>
+                                    <option value="">Seleccionar herramienta...</option>
+                                    <!-- Available tools will be populated by JavaScript -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div>
+                                <label for="distribute-quantity">Cantidad:</label>
+                                <input type="number" id="distribute-quantity" min="1" required placeholder="Ej: 2">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">🔄 Distribuir Herramienta</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab: Nombres -->
+            <div id="names" class="tab-content">
+                <div class="card">
+                    <h3>👤 Cambiar Nombres de Trabajadores</h3>
+                    <p style="color: #6c757d; margin-bottom: 25px;">
+                        Aquí puedes cambiar "Trabajador 1, 2, 3..." por los nombres reales de tus empleados.
+                    </p>
+                    <div id="names-message"></div>
+                    
+                    <div class="search-box">
+                        <input type="text" id="search-names" placeholder="Buscar trabajador...">
+                    </div>
+
+                    <div class="workers-table">
+                        <table id="names-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre Actual</th>
+                                    <th>Nuevo Nombre</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="names-tbody">
+                                <!-- Names will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Historial de Pérdidas -->
+            <div id="history" class="tab-content">
+                <div class="card">
+                    <h3>📋 Historial de Pérdidas</h3>
+                    <div class="search-box">
+                        <input type="text" id="search-history" placeholder="Buscar en historial...">
+                    </div>
+                    <div class="workers-table">
+                        <table id="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Trabajador</th>
+                                    <th>Herramienta</th>
+                                    <th>Cantidad</th>
+                                    <th>Motivo</th>
+                                    <th>Observaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <!-- History will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para descontar herramientas -->
+    <div id="discount-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; color: #2c3e50;">➖ Descontar Herramienta</h3>
+            <div id="discount-message"></div>
+            <form id="discount-form">
+                <input type="hidden" id="discount-worker">
+                
+                <div class="form-group">
+                    <label for="discount-tool-select">Herramienta a descontar:</label>
+                    <select id="discount-tool-select" required>
+                        <option value="">Seleccionar herramienta...</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div>
+                        <label for="discount-qty">Cantidad:</label>
+                        <input type="number" id="discount-qty" min="1" required>
+                    </div>
+                    <div>
+                        <label for="discount-reason">Motivo:</label>
+                        <select id="discount-reason" required>
+                            <option value="">Seleccionar motivo...</option>
+                            <option value="Robo">🚨 Robo</option>
+                            <option value="Pérdida">❓ Pérdida</option>
+                            <option value="Rotura">💥 Rotura</option>
+                            <option value="Desgaste">⚠️ Desgaste</option>
+                            <option value="Otro">📝 Otro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="discount-notes">Observaciones (opcional):</label>
+                    <input type="text" id="discount-notes" placeholder="Ej: Robado del vehículo, herramienta muy vieja, etc.">
+                </div>
+
+                <div style="text-align: right; margin-top: 25px;">
+                    <button type="button" class="btn" style="background: #6c757d;" id="close-modal-btn">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">➖ Descontar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURACIÓN Y VARIABLES GLOBALES
+        // ============================================
+        
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9hWkOND3JmufVk818TOcF2pdXA6NLCdkILDW-9nBZxbyboBBcWLyjIq58Aelee_9YAw/exec';
+
+        // Lista completa de herramientas
+        const toolsList = [
+            'Guantes dieléctrico p/ BT',
+            'Guantes dieléctrico p/ MT',
+            'Anteojos p/ protección ocular (oscuros)',
+            'Anteojos p/ protección ocular (claros)',
+            'Equipo P/ lluvia',
+            'Mantas aislantes',
+            'GANCHOS PARA MANTAS AISLANTES',
+            'Pinza Volt amperométrica',
+            'Rotador de fase',
+            'Caja porta herramienta',
+            'Bolso de Lona',
+            'Pinza Universal 200mm 8"',
+            'Pinza punta plana 180mm 6"',
+            'Pinza punta redonda 160mm 6"',
+            'Pinza tipo alicate corte oblicuo 6"',
+            'Zisalla corta cable',
+            'Llave francesa 8"',
+            'Llave francesa 10"',
+            'Llave francesa 12"',
+            'Destornillador punta plana 5.5 x 150mm',
+            'Destornillador punta plana 4x 100mm',
+            'Destornillador punta plana 8x 175mm',
+            'Destornillador chico Phillips 3x150mm',
+            'Destornillador Phillips 2x 125mm',
+            'Destornillador TORK',
+            'Llave criquet',
+            'Extensor para mango de fuerza largo',
+            'Mango de fuerza largo',
+            'Extensor para mango de fuerza corto 1/2',
+            'Tubo P/ criquet N° 10',
+            'Tubo P/ criquet N° 11',
+            'Tubo P/ criquet N° 12',
+            'Tubo P/ criquet N° 13',
+            'Tubo P/ criquet N° 14',
+            'Tubo P/ criquet N° 15',
+            'Tubo P/ criquet N° 16',
+            'Tubo P/ criquet N° 17',
+            'Tubo P/ criquet N° 18',
+            'Tubo P/ criquet N° 19',
+            'Tubo P/ criquet N° 20',
+            'Tubo P/ criquet N° 21',
+            'Tubo P/ criquet N° 22',
+            'Tubo P/ criquet N° 23',
+            'Tubo P/ criquet N° 24',
+            'Tubo P/ criquet N° 25',
+            'Tubo P/ criquet N° 26',
+            'Tubo P/ criquet N° 27',
+            'Tubo P/ criquet N° 28',
+            'Tubo P/ criquet N° 29',
+            'Tubo P/ criquet N° 30',
+            'Tubo P/ criquet N° 32',
+            'Llave fija abierta 1/2',
+            'Llave fija abierta 13',
+            'Llave fija abierta 14 ó 9/16',
+            'Llave fija abierta 15',
+            'Llave fija abierta 16',
+            'Llave fija abierta 17',
+            'Llave fija abierta 18',
+            'Llave fija abierta 19',
+            'Llave fija abierta 20',
+            'Llave fija abierta 21',
+            'Llave fija abierta 22',
+            'Llave fija abierta 23',
+            'Llave fija abierta 24',
+            'Llave fija estría 1/2',
+            'Llave fija estría 13',
+            'Llave fija estría 14',
+            'Llave fija estría 15',
+            'Llave fija estría 17',
+            'Llave fija estría 18',
+            'Llave fija estría 19',
+            'Llave fija estría 20',
+            'Llave fija estría 21',
+            'Llave fija estría 22',
+            'Llave fija estría 23',
+            'Llave fija estría 24',
+            'Martillo bolita',
+            'Maza',
+            'Arco de sierra',
+            'HOJA de Sierra',
+            'Serrucho para poda',
+            'Machete para poda',
+            'Cuchillo pela cable',
+            'Linterna de mano',
+            'Linterna tipo minero',
+            'Reflector manual',
+            'CONOS',
+            'APAREJO',
+            'PINZA TIRA CABLE',
+            'PUESTA TIERRA',
+            'DADOS INDENTADORA (PARES)',
+            'SEPARADORES (EN PARES)',
+            'CADENAS DE SEGURIDAD (PAQUETES)',
+            'ESCAFANDRA',
+            'SOMBRA PARA CASCO',
+            'DETECTOR DE MT',
+            'PROTECTOR FACIAL PARA CASCO',
+            'LLAVE DE MEDIDORES',
+            'PROBADOR DE TIERRA KIORITSU Mod 4200',
+            'PINZAS INDENTADORAS',
+            'pistola de temperatura',
+            'Crimpeadora terminales'
+        ];
+
+        // Variables globales
+        let stock = {};
+        let workers = {};
+        let lossHistory = [];
+        let workerNames = {};
+        let isAutoSyncEnabled = false;
+        let autoSyncInterval = null;
+        let lastSyncTime = null;
+
+        // ============================================
+        // FUNCIONES DE INICIALIZACIÓN
+        // ============================================
+
+        function initializeStock() {
+            toolsList.forEach(tool => {
+                stock[tool] = 0;
+            });
+        }
+
+        function initializeWorkers() {
+            if (Object.keys(workers).length === 0) {
+                for (let i = 1; i <= 41; i++) {
+                    const workerId = `Trabajador ${i}`;
+                    workers[workerId] = {};
+                    workerNames[workerId] = workerId;
+                }
+            }
+        }
+
+        function populateToolSelect() {
+            const select = document.getElementById('tool-type');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">Seleccionar herramienta...</option>';
+            
+            toolsList.forEach(tool => {
+                const option = document.createElement('option');
+                option.value = tool;
+                option.textContent = `🔧 ${tool}`;
+                select.appendChild(option);
+            });
+        }
+
+        function populateWorkerSelect() {
+            const select = document.getElementById('worker-select');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">Seleccionar trabajador...</option>';
+            
+            Object.keys(workers).forEach(workerId => {
+                const option = document.createElement('option');
+                option.value = workerId;
+                option.textContent = getWorkerDisplayName(workerId);
+                select.appendChild(option);
+            });
+        }
+
+        function populateDistributeTools() {
+            const select = document.getElementById('distribute-tool');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">Seleccionar herramienta...</option>';
+            
+            Object.entries(stock).forEach(([tool, quantity]) => {
+                if (quantity > 0) {
+                    const option = document.createElement('option');
+                    option.value = tool;
+                    option.textContent = `🔧 ${tool} (${quantity} disponibles)`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // ============================================
+        // FUNCIONES DE SINCRONIZACIÓN CON GOOGLE SHEETS
+        // ============================================
+
+        async function syncFromGoogleSheets() {
+            try {
+                updateSyncStatus('syncing', '🔄 Sincronizando desde Google Sheets...');
+                disableButtons(true);
+
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.stock) {
+                    toolsList.forEach(tool => {
+                        stock[tool] = data.stock[tool] || 0;
+                    });
+                }
+
+                if (data.workers) {
+                    workers = data.workers;
+                }
+
+                if (data.history) {
+                    lossHistory = data.history;
+                }
+
+                if (data.names) {
+                    workerNames = data.names;
+                }
+
+                lastSyncTime = new Date();
+                updateSyncStatus('connected', '✅ Sincronizado correctamente');
+                showMessage('stock-message', '✅ Datos sincronizados desde Google Sheets', 'success');
+                
+                updateDisplay();
+                populateWorkerSelect();
+                populateDistributeTools();
+
+            } catch (error) {
+                console.error('Error syncing from Google Sheets:', error);
+                updateSyncStatus('error', '❌ Error de conexión');
+                showMessage('stock-message', '❌ Error al sincronizar desde Google Sheets. Trabajando en modo local.', 'warning');
+            } finally {
+                disableButtons(false);
+            }
+        }
+
+        async function pushToGoogleSheets() {
+            try {
+                updateSyncStatus('syncing', '🔄 Subiendo datos a Google Sheets...');
+                disableButtons(true);
+
+                const responses = await Promise.all([
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'updateStock',
+                            stock: stock
+                        })
+                    }),
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'updateWorkers',
+                            workers: workers
+                        })
+                    }),
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'updateHistory',
+                            history: lossHistory
+                        })
+                    }),
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'updateNames',
+                            names: workerNames
+                        })
+                    })
+                ]);
+
+                lastSyncTime = new Date();
+                updateSyncStatus('connected', '✅ Datos subidos correctamente');
+                showMessage('stock-message', '✅ Datos enviados a Google Sheets', 'success');
+
+            } catch (error) {
+                console.error('Error pushing to Google Sheets:', error);
+                updateSyncStatus('error', '❌ Error al subir datos');
+                showMessage('stock-message', '❌ Error al enviar datos a Google Sheets. Datos guardados localmente.', 'warning');
+            } finally {
+                disableButtons(false);
+            }
+        }
+
+        function toggleAutoSync() {
+            isAutoSyncEnabled = !isAutoSyncEnabled;
+            const button = document.getElementById('auto-sync-btn');
+            
+            if (isAutoSyncEnabled) {
+                button.textContent = '🔄 Auto-Sync: ON';
+                button.className = 'btn btn-success';
+                autoSyncInterval = setInterval(() => {
+                    syncFromGoogleSheets();
+                }, 30000);
+                showMessage('stock-message', '✅ Sincronización automática activada (cada 30 seg)', 'success');
+            } else {
+                button.textContent = '🔄 Auto-Sync: OFF';
+                button.className = 'btn';
+                if (autoSyncInterval) {
+                    clearInterval(autoSyncInterval);
+                    autoSyncInterval = null;
+                }
+                showMessage('stock-message', '⚠️ Sincronización automática desactivada', 'warning');
+            }
+            
+            updateSyncInfo();
+        }
+
+        function updateSyncStatus(status, message) {
+            const statusElement = document.getElementById('sync-status');
+            const statusText = statusElement.querySelector('span:first-child');
+            
+            if (statusElement && statusText) {
+                statusElement.className = `sync-status ${status}`;
+                statusText.textContent = message;
+                
+                if (lastSyncTime) {
+                    const lastSyncElement = document.getElementById('last-sync');
+                    if (lastSyncElement) {
+                        lastSyncElement.textContent = `Última sync: ${lastSyncTime.toLocaleTimeString('es-AR')}`;
+                    }
+                }
+            }
+        }
+
+        function updateSyncInfo() {
+            const syncInfo = document.getElementById('sync-info');
+            if (!syncInfo) return;
+            
+            const status = isAutoSyncEnabled ? 
+                `Auto-sync activado (cada 30 seg) - ${lastSyncTime ? 'Última sync: ' + lastSyncTime.toLocaleTimeString('es-AR') : 'Nunca sincronizado'}` :
+                `Auto-sync desactivado - ${lastSyncTime ? 'Última sync: ' + lastSyncTime.toLocaleTimeString('es-AR') : 'Nunca sincronizado'}`;
+            
+            syncInfo.textContent = status;
+        }
+
+        function disableButtons(disabled) {
+            const syncBtn = document.getElementById('sync-btn');
+            const pushBtn = document.getElementById('push-btn');
+            
+            if (syncBtn) syncBtn.disabled = disabled;
+            if (pushBtn) pushBtn.disabled = disabled;
+        }
+
+        async function autoSyncAfterChange() {
+            if (isAutoSyncEnabled) {
+                await pushToGoogleSheets();
+            }
+        }
+
+        // ============================================
+        // FUNCIONES DE INTERFAZ DE USUARIO
+        // ============================================
+
+        function showTab(tabName) {
+            // Ocultar todos los contenidos
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remover clase active de todos los botones
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Mostrar contenido seleccionado
+            const targetTab = document.getElementById(tabName);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            
+            // Activar botón correspondiente
+            const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            element.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 5000);
+        }
+
+        function getWorkerDisplayName(workerId) {
+            return workerNames[workerId] || workerId;
+        }
+
+        // ============================================
+        // FUNCIONES DE GESTIÓN DE STOCK
+        // ============================================
+
+        async function addToStock(event) {
+            event.preventDefault();
+            const toolType = document.getElementById('tool-type').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+
+            if (!toolType || !quantity) {
+                showMessage('add-message', '❌ Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            stock[toolType] += quantity;
+
+            showMessage('add-message', `✅ Se agregaron ${quantity} ${toolType} al stock`, 'success');
+            updateDisplay();
+            populateDistributeTools();
+            
+            await autoSyncAfterChange();
+            
+            // Reset form
+            document.getElementById('tool-type').value = '';
+            document.getElementById('quantity').value = '';
+        }
+
+        async function distributeTools(event) {
+            event.preventDefault();
+            const worker = document.getElementById('worker-select').value;
+            const toolType = document.getElementById('distribute-tool').value;
+            const quantity = parseInt(document.getElementById('distribute-quantity').value);
+
+            if (!worker || !toolType || !quantity) {
+                showMessage('distribute-message', '❌ Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            if (stock[toolType] < quantity) {
+                showMessage('distribute-message', `❌ No hay suficiente stock de ${toolType}. Disponible: ${stock[toolType]}`, 'error');
+                return;
+            }
+
+            stock[toolType] -= quantity;
+            
+            if (!workers[worker][toolType]) {
+                workers[worker][toolType] = 0;
+            }
+            workers[worker][toolType] += quantity;
+
+            showMessage('distribute-message', `✅ ${quantity} ${toolType} distribuido(s) a ${getWorkerDisplayName(worker)}`, 'success');
+            updateDisplay();
+            populateDistributeTools();
+            
+            await autoSyncAfterChange();
+            
+            // Reset form
+            document.getElementById('worker-select').value = '';
+            document.getElementById('distribute-tool').value = '';
+            document.getElementById('distribute-quantity').value = '';
+        }
+
+        // ============================================
+        // FUNCIONES DE VISUALIZACIÓN
+        // ============================================
+
+        function updateDisplay() {
+            updateStockGrid();
+            updateWorkersTable();
+            updateStats();
+            updateHistoryTable();
+            updateNamesTable();
+        }
+
+        function updateStockGrid() {
+            const grid = document.getElementById('stock-grid');
+            if (!grid) return;
+            
+            grid.innerHTML = '';
+
+            Object.entries(stock).forEach(([tool, quantity]) => {
+                const item = document.createElement('div');
+                item.className = 'stock-item';
+                item.innerHTML = `
+                    <h4>🔧 ${tool}</h4>
+                    <div class="stock-count">${quantity}</div>
+                    <small>${quantity === 0 ? 'Sin stock' : 'En stock'}</small>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        function updateWorkersTable() {
+            const tbody = document.getElementById('workers-tbody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+
+            Object.entries(workers).forEach(([workerId, tools]) => {
+                const row = document.createElement('tr');
+                const toolsArray = Object.entries(tools);
+                const totalTools = toolsArray.reduce((sum, [_, qty]) => sum + qty, 0);
+                const displayName = getWorkerDisplayName(workerId);
+                
+                const toolBadges = toolsArray.map(([tool, qty]) => 
+                    `<span class="tool-badge">🔧 ${tool}: ${qty}</span>`
+                ).join('');
+
+                row.innerHTML = `
+                    <td><strong>${displayName}</strong></td>
+                    <td><div class="worker-tools">${toolBadges || '<em>Sin herramientas asignadas</em>'}</div></td>
+                    <td><strong>${totalTools}</strong></td>
+                    <td>
+                        <button class="btn btn-danger" onclick="openDiscountModal('${workerId}')">➖ Descontar</button>
+                        <button class="btn btn-danger" onclick="resetWorkerTools('${workerId}')">🗑️ Limpiar Todo</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateStats() {
+            const totalTools = Object.values(stock).reduce((sum, qty) => sum + qty, 0);
+            
+            const totalToolsEl = document.getElementById('total-tools');
+            const toolTypesEl = document.getElementById('tool-types');
+            
+            if (totalToolsEl) totalToolsEl.textContent = totalTools;
+            if (toolTypesEl) toolTypesEl.textContent = toolsList.length;
+        }
+
+        function updateHistoryTable() {
+            const tbody = document.getElementById('history-tbody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            const sortedHistory = [...lossHistory].reverse();
+            
+            sortedHistory.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.date}</td>
+                    <td><strong>${entry.worker}</strong></td>
+                    <td>🔧 ${entry.tool}</td>
+                    <td><strong>${entry.quantity}</strong></td>
+                    <td><span style="background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">${entry.reason}</span></td>
+                    <td>${entry.notes}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            if (lossHistory.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="6" style="text-align: center; color: #6c757d; font-style: italic;">No hay registros de pérdidas</td>';
+                tbody.appendChild(row);
+            }
+        }
+
+        function updateNamesTable() {
+            const tbody = document.getElementById('names-tbody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            Object.keys(workers).forEach(workerId => {
+                const row = document.createElement('tr');
+                const displayName = getWorkerDisplayName(workerId);
+                const isDefault = workerNames[workerId] === workerId;
+                
+                row.innerHTML = `
+                    <td><strong>${workerId}</strong></td>
+                    <td>
+                        <input type="text" id="name-input-${workerId.replace(/\s+/g, '')}" 
+                               value="${displayName}" 
+                               placeholder="Ej: Juan Pérez"
+                               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </td>
+                    <td>
+                        <button class="btn btn-success" onclick="changeName('${workerId}')">✅ Cambiar</button>
+                        ${!isDefault ? '<button class="btn" style="background: #6c757d;" onclick="resetName(\'' + workerId + '\')">🔄 Restablecer</button>' : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // ============================================
+        // FUNCIONES DE MODAL Y DESCUENTOS
+        // ============================================
+
+        function openDiscountModal(workerId) {
+            const modal = document.getElementById('discount-modal');
+            const workerInput = document.getElementById('discount-worker');
+            const toolSelect = document.getElementById('discount-tool-select');
+            
+            if (!modal || !workerInput || !toolSelect) return;
+            
+            workerInput.value = workerId;
+            
+            toolSelect.innerHTML = '<option value="">Seleccionar herramienta...</option>';
+            
+            Object.entries(workers[workerId]).forEach(([tool, quantity]) => {
+                if (quantity > 0) {
+                    const option = document.createElement('option');
+                    option.value = tool;
+                    option.textContent = `🔧 ${tool} (${quantity} disponibles)`;
+                    toolSelect.appendChild(option);
+                }
+            });
+            
+            modal.style.display = 'block';
+        }
+
+        function closeDiscountModal() {
+            const modal = document.getElementById('discount-modal');
+            if (!modal) return;
+            
+            modal.style.display = 'none';
+            
+            // Reset form
+            const elements = [
+                'discount-tool-select',
+                'discount-qty',
+                'discount-reason',
+                'discount-notes',
+                'discount-message'
+            ];
+            
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (el.tagName === 'SELECT' || el.tagName === 'INPUT') {
+                        el.value = '';
+                    } else {
+                        el.innerHTML = '';
+                    }
+                }
+            });
+        }
+
+        async function discountTool(event) {
+            event.preventDefault();
+            
+            const workerId = document.getElementById('discount-worker').value;
+            const tool = document.getElementById('discount-tool-select').value;
+            const quantity = parseInt(document.getElementById('discount-qty').value);
+            const reason = document.getElementById('discount-reason').value;
+            const notes = document.getElementById('discount-notes').value;
+            const displayName = getWorkerDisplayName(workerId);
+            
+            if (!tool || !quantity || !reason) {
+                showMessage('discount-message', '❌ Por favor completa todos los campos obligatorios', 'error');
+                return;
+            }
+            
+            if (!workers[workerId][tool] || workers[workerId][tool] < quantity) {
+                showMessage('discount-message', `❌ ${displayName} no tiene suficientes ${tool}`, 'error');
+                return;
+            }
+            
+            workers[workerId][tool] -= quantity;
+            
+            if (workers[workerId][tool] === 0) {
+                delete workers[workerId][tool];
+            }
+            
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-AR') + ' ' + now.toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'});
+            
+            lossHistory.push({
+                date: dateStr,
+                worker: displayName,
+                tool: tool,
+                quantity: quantity,
+                reason: reason,
+                notes: notes || '-'
+            });
+            
+            showMessage('discount-message', `✅ Se descontaron ${quantity} ${tool} de ${displayName}`, 'success');
+            updateDisplay();
+            
+            await autoSyncAfterChange();
+            
+            setTimeout(() => {
+                closeDiscountModal();
+            }, 2000);
+        }
+
+        async function resetWorkerTools(workerId) {
+            const displayName = getWorkerDisplayName(workerId);
+            if (confirm(`¿Estás seguro de que quieres limpiar todas las herramientas de ${displayName}?`)) {
+                Object.entries(workers[workerId]).forEach(([tool, quantity]) => {
+                    stock[tool] += quantity;
+                });
+                
+                workers[workerId] = {};
+                updateDisplay();
+                populateDistributeTools();
+                
+                await autoSyncAfterChange();
+            }
+        }
+
+        // ============================================
+        // FUNCIONES DE NOMBRES
+        // ============================================
+
+        async function changeName(workerId) {
+            const inputId = `name-input-${workerId.replace(/\s+/g, '')}`;
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const newName = input.value.trim();
+            
+            if (!newName) {
+                showMessage('names-message', '❌ El nombre no puede estar vacío', 'error');
+                return;
+            }
+            
+            const existingNames = Object.values(workerNames);
+            if (existingNames.includes(newName) && workerNames[workerId] !== newName) {
+                showMessage('names-message', '❌ Ya existe un trabajador con ese nombre', 'error');
+                return;
+            }
+            
+            workerNames[workerId] = newName;
+            showMessage('names-message', `✅ Nombre cambiado a "${newName}"`, 'success');
+            
+            updateDisplay();
+            populateWorkerSelect();
+            
+            await autoSyncAfterChange();
+        }
+
+        async function resetName(workerId) {
+            workerNames[workerId] = workerId;
+            showMessage('names-message', `🔄 Nombre restablecido a "${workerId}"`, 'success');
+            
+            updateDisplay();
+            populateWorkerSelect();
+            
+            await autoSyncAfterChange();
+        }
+
+        // ============================================
+        // FUNCIONES DE FILTRADO
+        // ============================================
+
+        function filterStock() {
+            const search = document.getElementById('search-stock');
+            if (!search) return;
+            
+            const searchTerm = search.value.toLowerCase();
+            const items = document.querySelectorAll('.stock-item');
+            
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        function filterWorkers() {
+            const search = document.getElementById('search-workers');
+            if (!search) return;
+            
+            const searchTerm = search.value.toLowerCase();
+            const rows = document.querySelectorAll('#workers-tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        function filterHistory() {
+            const search = document.getElementById('search-history');
+            if (!search) return;
+            
+            const searchTerm = search.value.toLowerCase();
+            const rows = document.querySelectorAll('#history-tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        function filterNames() {
+            const search = document.getElementById('search-names');
+            if (!search) return;
+            
+            const searchTerm = search.value.toLowerCase();
+            const rows = document.querySelectorAll('#names-tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        // ============================================
+        // FUNCIONES DE EXPORTAR/IMPORTAR
+        // ============================================
+
+        function exportData() {
+            try {
+                const data = {
+                    stock: stock,
+                    workers: workers,
+                    lossHistory: lossHistory,
+                    workerNames: workerNames,
+                    exported: new Date().toISOString(),
+                    version: '2.1'
+                };
+                
+                const dataStr = JSON.stringify(data, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `herramientas_backup_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                
+                showMessage('stock-message', '✅ Datos exportados correctamente', 'success');
+            } catch (error) {
+                console.error('Error al exportar datos:', error);
+                showMessage('stock-message', '❌ Error al exportar datos', 'error');
+            }
+        }
+
+        async function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.stock && data.workers && data.lossHistory && data.workerNames) {
+                        Object.keys(stock).forEach(tool => {
+                            if (data.stock[tool] !== undefined) {
+                                stock[tool] = data.stock[tool];
+                            }
+                        });
+                        
+                        workers = data.workers;
+                        lossHistory = data.lossHistory;
+                        workerNames = data.workerNames;
+                        
+                        updateDisplay();
+                        populateWorkerSelect();
+                        populateDistributeTools();
+                        populateToolSelect();
+                        
+                        await autoSyncAfterChange();
+                        
+                        showMessage('stock-message', '✅ Datos importados correctamente', 'success');
+                    } else {
+                        throw new Error('Formato de archivo inválido');
+                    }
+                } catch (error) {
+                    console.error('Error al importar datos:', error);
+                    showMessage('stock-message', '❌ Error al importar: archivo inválido', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            event.target.value = '';
+        }
+
+        // ============================================
+        // INICIALIZACIÓN Y EVENT LISTENERS
+        // ============================================
+
+        function setupEventListeners() {
+            // Tabs
+            document.querySelectorAll('.tab[data-tab]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabName = this.getAttribute('data-tab');
+                    showTab(tabName);
+                });
+            });
+
+            // Forms
+            const addForm = document.getElementById('add-form');
+            if (addForm) {
+                addForm.addEventListener('submit', addToStock);
+            }
+
+            const distributeForm = document.getElementById('distribute-form');
+            if (distributeForm) {
+                distributeForm.addEventListener('submit', distributeTools);
+            }
+
+            const discountForm = document.getElementById('discount-form');
+            if (discountForm) {
+                discountForm.addEventListener('submit', discountTool);
+            }
+
+            // Buttons
+            const syncBtn = document.getElementById('sync-btn');
+            if (syncBtn) {
+                syncBtn.addEventListener('click', syncFromGoogleSheets);
+            }
+
+            const pushBtn = document.getElementById('push-btn');
+            if (pushBtn) {
+                pushBtn.addEventListener('click', pushToGoogleSheets);
+            }
+
+            const autoSyncBtn = document.getElementById('auto-sync-btn');
+            if (autoSyncBtn) {
+                autoSyncBtn.addEventListener('click', toggleAutoSync);
+            }
+
+            const exportBtn = document.getElementById('export-btn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', exportData);
+            }
+
+            const importBtn = document.getElementById('import-btn');
+            const importFile = document.getElementById('import-file');
+            if (importBtn && importFile) {
+                importBtn.addEventListener('click', () => importFile.click());
+                importFile.addEventListener('change', importData);
+            }
+
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', closeDiscountModal);
+            }
+
+            // Search inputs
+            const searchStock = document.getElementById('search-stock');
+            if (searchStock) {
+                searchStock.addEventListener('keyup', filterStock);
+            }
+
+            const searchWorkers = document.getElementById('search-workers');
+            if (searchWorkers) {
+                searchWorkers.addEventListener('keyup', filterWorkers);
+            }
+
+            const searchHistory = document.getElementById('search-history');
+            if (searchHistory) {
+                searchHistory.addEventListener('keyup', filterHistory);
+            }
+
+            const searchNames = document.getElementById('search-names');
+            if (searchNames) {
+                searchNames.addEventListener('keyup', filterNames);
+            }
+
+            // Close modal when clicking outside
+            const modal = document.getElementById('discount-modal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeDiscountModal();
+                    }
+                });
+            }
+        }
+
+        // Función principal de inicialización
+        async function init() {
+            console.log('🚀 Inicializando aplicación...');
+            
+            // Inicializar datos
+            initializeStock();
+            initializeWorkers();
+            
+            // Configurar interfaz
+            populateToolSelect();
+            populateWorkerSelect();
+            populateDistributeTools();
+            
+            // Configurar event listeners
+            setupEventListeners();
+            
+            // Actualizar displays
+            updateDisplay();
+            updateSyncInfo();
+            
+            console.log('✅ Aplicación inicializada correctamente');
+            
+            // Intentar sincronización inicial
+            await syncFromGoogleSheets();
+        }
+
+        // Inicializar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM cargado, iniciando aplicación...');
+            init();
+        });
+
+        // Backup de inicialización por si DOMContentLoaded ya pasó
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // ============================================
+        // FUNCIONES GLOBALES ACCESIBLES DESDE HTML
+        // ============================================
+        
+        // Hacer funciones accesibles globalmente para los onclick en HTML
+        window.showTab = showTab;
+        window.syncFromGoogleSheets = syncFromGoogleSheets;
+        window.pushToGoogleSheets = pushToGoogleSheets;
+        window.toggleAutoSync = toggleAutoSync;
+        window.addToStock = addToStock;
+        window.distributeTools = distributeTools;
+        window.openDiscountModal = openDiscountModal;
+        window.closeDiscountModal = closeDiscountModal;
+        window.discountTool = discountTool;
+        window.resetWorkerTools = resetWorkerTools;
+        window.changeName = changeName;
+        window.resetName = resetName;
+        window.filterStock = filterStock;
+        window.filterWorkers = filterWorkers;
+        window.filterHistory = filterHistory;
+        window.filterNames = filterNames;
+        window.exportData = exportData;
+        window.importData = importData;
+
+        // ============================================
+        // FUNCIONES DE UTILIDAD
+        // ============================================
+        
+        // Función para manejar errores de red de manera más elegante
+        function handleNetworkError(error, fallbackMessage) {
+            console.error('Error de red:', error);
+            
+            if (!navigator.onLine) {
+                return '🔌 Sin conexión a internet. Trabajando en modo local.';
+            }
+            
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                return '🌐 Error de conexión. Verifica tu conexión a internet.';
+            }
+            
+            return fallbackMessage || '❌ Error de conexión inesperado.';
+        }
+
+        // Función para guardar datos en localStorage como backup
+        function saveToLocalStorage() {
+            try {
+                const data = {
+                    stock: stock,
+                    workers: workers,
+                    lossHistory: lossHistory,
+                    workerNames: workerNames,
+                    lastSaved: new Date().toISOString()
+                };
+                localStorage.setItem('herramientasBackup', JSON.stringify(data));
+                console.log('💾 Datos guardados en localStorage');
+            } catch (error) {
+                console.warn('No se pudo guardar en localStorage:', error);
+            }
+        }
+
+        // Función para cargar datos desde localStorage
+        function loadFromLocalStorage() {
+            try {
+                const data = localStorage.getItem('herramientasBackup');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    
+                    if (parsed.stock) stock = parsed.stock;
+                    if (parsed.workers) workers = parsed.workers;
+                    if (parsed.lossHistory) lossHistory = parsed.lossHistory;
+                    if (parsed.workerNames) workerNames = parsed.workerNames;
+                    
+                    console.log('📂 Datos cargados desde localStorage');
+                    return true;
+                }
+            } catch (error) {
+                console.warn('No se pudo cargar desde localStorage:', error);
+            }
+            return false;
+        }
+
+        // Función para detectar si estamos en modo local
+        function isLocalFile() {
+            return window.location.protocol === 'file:';
+        }
+
+        // Función para mostrar notificación de modo local
+        function showLocalModeNotification() {
+            if (isLocalFile()) {
+                const notification = document.createElement('div');
+                notification.innerHTML = `
+                    <div class="alert alert-warning" style="margin: 10px; animation: fadeIn 0.5s;">
+                        <strong>🏠 Modo Local Detectado:</strong> 
+                        La sincronización con Google Sheets puede estar limitada. 
+                        Los datos se guardan localmente en tu navegador.
+                        <button onclick="this.parentElement.style.display='none'" style="float: right; background: none; border: none; font-size: 18px; cursor: pointer;">×</button>
+                    </div>
+                `;
+                document.body.insertBefore(notification, document.body.firstChild);
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 10000);
+            }
+        }
+
+        // Auto-guardar en localStorage después de cada cambio
+        function autoSave() {
+            saveToLocalStorage();
+        }
+
+        // Función para verificar conexión a internet
+        function checkInternetConnection() {
+            return navigator.onLine && 
+                   window.location.protocol !== 'file:' && 
+                   typeof fetch !== 'undefined';
+        }
+
+        // ============================================
+        // VERSIONES MEJORADAS DE FUNCIONES CRÍTICAS
+        // ============================================
+
+        // Versión mejorada de syncFromGoogleSheets con mejor manejo de errores
+        async function syncFromGoogleSheetsImproved() {
+            const hasInternet = checkInternetConnection();
+            
+            if (!hasInternet) {
+                updateSyncStatus('error', '🔌 Sin conexión - Modo local');
+                showMessage('stock-message', '🔌 Trabajando en modo local. Los cambios se guardan localmente.', 'warning');
+                loadFromLocalStorage();
+                updateDisplay();
+                return;
+            }
+
+            try {
+                updateSyncStatus('syncing', '🔄 Sincronizando...');
+                disableButtons(true);
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    signal: controller.signal,
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                // Procesar datos recibidos
+                if (data.stock) {
+                    toolsList.forEach(tool => {
+                        stock[tool] = data.stock[tool] || 0;
+                    });
+                }
+
+                if (data.workers) workers = data.workers;
+                if (data.history) lossHistory = data.history;
+                if (data.names) workerNames = data.names;
+
+                lastSyncTime = new Date();
+                updateSyncStatus('connected', '✅ Sincronizado');
+                showMessage('stock-message', '✅ Datos sincronizados correctamente', 'success');
+                
+                // Guardar backup local
+                autoSave();
+                
+                updateDisplay();
+                populateWorkerSelect();
+                populateDistributeTools();
+
+            } catch (error) {
+                console.error('Error en sincronización:', error);
+                
+                let errorMessage = handleNetworkError(error, '❌ Error al sincronizar');
+                
+                if (error.name === 'AbortError') {
+                    errorMessage = '⏱️ Tiempo de espera agotado. Verifica tu conexión.';
+                }
+                
+                updateSyncStatus('error', '❌ Error de sync');
+                showMessage('stock-message', errorMessage, 'warning');
+                
+                // Cargar datos locales como fallback
+                if (loadFromLocalStorage()) {
+                    showMessage('stock-message', '📂 Cargando datos locales guardados...', 'warning');
+                    updateDisplay();
+                    populateWorkerSelect();
+                    populateDistributeTools();
+                }
+                
+            } finally {
+                disableButtons(false);
+            }
+        }
+
+        // Override de la función original
+        window.syncFromGoogleSheets = syncFromGoogleSheetsImproved;
+
+        // ============================================
+        // MEJORAR LA INICIALIZACIÓN
+        // ============================================
+        
+        // Versión mejorada de init
+        async function initImproved() {
+            console.log('🚀 Inicializando aplicación (versión mejorada)...');
+            
+            try {
+                // Mostrar notificación de modo local si es necesario
+                showLocalModeNotification();
+                
+                // Inicializar datos base
+                initializeStock();
+                initializeWorkers();
+                
+                // Intentar cargar datos locales primero
+                const hasLocalData = loadFromLocalStorage();
+                if (hasLocalData) {
+                    console.log('📂 Datos locales cargados');
+                }
+                
+                // Configurar interfaz
+                populateToolSelect();
+                populateWorkerSelect();
+                populateDistributeTools();
+                
+                // Configurar event listeners
+                setupEventListeners();
+                
+                // Actualizar displays
+                updateDisplay();
+                updateSyncInfo();
+                
+                console.log('✅ Aplicación inicializada correctamente');
+                
+                // Intentar sincronización inicial solo si hay internet
+                if (checkInternetConnection()) {
+                    console.log('🌐 Intentando sincronización inicial...');
+                    await syncFromGoogleSheetsImproved();
+                } else {
+                    console.log('🏠 Modo local - Sincronización omitida');
+                    updateSyncStatus('error', '🏠 Modo local');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error durante la inicialización:', error);
+                showMessage('stock-message', '⚠️ La aplicación se inició con algunos problemas, pero debería funcionar normalmente.', 'warning');
+            }
+        }
+
+        // Agregar estilos adicionales para las animaciones
+        const additionalStyles = `
+            <style>
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                
+                .notification {
+                    animation: fadeIn 0.5s ease-out;
+                }
+                
+                .btn:active {
+                    transform: translateY(0px) !important;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+                }
+                
+                .loading {
+                    pointer-events: none;
+                    opacity: 0.7;
+                }
+            </style>
+        `;
+        
+        document.head.insertAdjacentHTML('beforeend', additionalStyles);
+
+        // Reemplazar la función init original
+        window.init = initImproved;
+
+        console.log('🔧 Sistema de herramientas cargado y listo');
+    </script>
+</body>
+</html>
